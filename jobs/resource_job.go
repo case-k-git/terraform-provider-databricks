@@ -292,6 +292,7 @@ type JobSettings struct {
 	RunAs                *JobRunAs                     `json:"run_as,omitempty" tf:"suppress_diff"`
 	Health               *JobHealth                    `json:"health,omitempty"`
 	Parameters           []JobParameterDefinition      `json:"parameters,omitempty" tf:"alias:parameter"`
+	AccessControlList    []JobAccessControlList        `json:"access_control_list,omitempty"`
 }
 
 func (js *JobSettings) isMultiTask() bool {
@@ -350,6 +351,12 @@ type JobParameter struct {
 type JobParameterDefinition struct {
 	Name    string `json:"name,omitempty"`
 	Default string `json:"default,omitempty"`
+}
+
+// Job access control list definitions
+type JobAccessControlList struct {
+	GroupName       string `json:"group_name,omitempty"`
+	PermissionLevel string `json:"permission_level,omitempty"`
 }
 
 // RunState of the job
