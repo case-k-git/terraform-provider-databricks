@@ -82,6 +82,75 @@ func TestResourceClusterCreate(t *testing.T) {
 	assert.Equal(t, "abc", d.Id())
 }
 
+func TestResourceClusterCreate2(t *testing.T) {
+	d, err := qa.ResourceFixture{
+		Fixtures: []qa.HTTPFixture{
+			{
+				Method:   "POST",
+				Resource: "/api/2.0/clusters/create",
+				ExpectedRequest: compute.ClusterSpec{
+					NumWorkers:   100,
+					ClusterName:  "Shared Autoscaling",
+					SparkVersion: "7.1-scala12",
+					// NodeTypeId:             "i3.xlarge",
+					AutoterminationMinutes: 15,
+				},
+				Response: compute.ClusterDetails{
+					ClusterId: "abc",
+					State:     compute.StateRunning,
+				},
+			},
+			{
+				Method:       "GET",
+				ReuseRequest: true,
+				Resource:     "/api/2.0/clusters/get?cluster_id=abc",
+				Response: compute.ClusterDetails{
+					ClusterId:    "abc",
+					NumWorkers:   100,
+					ClusterName:  "Shared Autoscaling",
+					SparkVersion: "7.1-scala12",
+					// NodeTypeId:             "i3.xlarge",
+					AutoterminationMinutes: 15,
+					State:                  compute.StateRunning,
+				},
+			},
+			{
+				Method:   "POST",
+				Resource: "/api/2.0/clusters/events",
+				ExpectedRequest: compute.GetEvents{
+					ClusterId:  "abc",
+					Limit:      1,
+					Order:      compute.GetEventsOrderDesc,
+					EventTypes: []compute.EventType{compute.EventTypePinned, compute.EventTypeUnpinned},
+				},
+				Response: compute.GetEventsResponse{
+					Events:     []compute.ClusterEvent{},
+					TotalCount: 0,
+				},
+			},
+			{
+				Method:   "GET",
+				Resource: "/api/2.0/libraries/cluster-status?cluster_id=abc",
+				Response: compute.ClusterLibraryStatuses{
+					LibraryStatuses: []compute.LibraryFullStatus{},
+				},
+			},
+		},
+		Create:   true,
+		Resource: ResourceCluster(),
+		State: map[string]any{
+			"autotermination_minutes": 15,
+			"cluster_name":            "Shared Autoscaling",
+			"spark_version":           "7.1-scala12",
+			// "node_type_id":            "i3.xlarge",
+			"num_workers": 100,
+			"is_pinned":   false,
+		},
+	}.Apply(t)
+	assert.NoError(t, err)
+	assert.Equal(t, "abc", d.Id())
+}
+
 func TestResourceClusterCreatePinned(t *testing.T) {
 	d, err := qa.ResourceFixture{
 		Fixtures: []qa.HTTPFixture{
